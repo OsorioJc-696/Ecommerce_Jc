@@ -25,7 +25,16 @@ export default function ProductsPage() {
           getAllProducts(),
           getCategories()
         ]);
-        setProducts(fetchedProducts);
+        setProducts(
+          fetchedProducts.map((p) => ({
+            ...p,
+            price: new (require('decimal.js').Decimal)(p.price),
+            rating:
+              p.rating !== null && typeof p.rating === 'number'
+                ? new (require('decimal.js').Decimal)(p.rating)
+                : p.rating
+          }))
+        );
         setCategories(fetchedCategories);
       } catch (error) {
         console.error("Failed to load products or categories:", error);

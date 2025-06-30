@@ -34,6 +34,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
+    console.error('[PRODUCT_POST_ERROR]', error); // ✅ Agrega esto
     return NextResponse.json({ error: 'Error creating product' }, { status: 500 });
   }
 }
+
