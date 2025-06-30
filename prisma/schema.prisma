@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// --- User Model ---
+model User {
+  id                Int       @id @default(autoincrement())
+  username          String    @unique
+  email             String    @unique
+  password          String
+  dni               String?   @unique @db.VarChar(8)
+  firstName         String?
+  lastName          String?
+  phoneNumber       String?   @db.VarChar(9)
+  address           String?
+  photoUrl          String?   @db.Text
+  isAdmin           Boolean   @default(false)
+  orders            Order[]
+  favorites         Favorite[] // ✅ nuevo
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  cartItems         CartItem[]
+
+}
+
+
+// --- Product Model ---
+model Product {
+  id               Int        @id @default(autoincrement())
+  name             String
+  description      String?    @db.Text
+  price            Decimal    @db.Decimal(10, 2)
+  image            String?    @db.Text
+  additionalImages Json?
+  category         String
+  stock            Int        @default(0)
+  customizable     String?
+  baseSpecs        Json?
+  rating           Decimal?   @db.Decimal(3, 2)
+  orderItems       OrderItem[]
+  reviews          Review[]
+  favoritedBy      Favorite[] // ✅ nuevo
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  cartItems        CartItem[]
+
+   // Add this property
+}
+
+
+// --- Order Model ---
+model Order {
+  id              String      @id // Use String for custom Order ID
+  userId          Int
+  user            User        @relation(fields: [userId], references: [id])
+  subtotal        Decimal     @db.Decimal(10, 2)
+  giftWrapTotal   Decimal     @db.Decimal(10, 2)
+  total           Decimal     @db.Decimal(10, 2)
+  status          String      // Store enum values as string, validation in app logic
+  orderDate       DateTime    @default(now())
+  shippingAddress String
+  billingAddress  String
+  billingEmail    String
+  paymentMethod   String?
+  items           OrderItem[] // Relation to OrderItem model
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId]) // Add index for faster user order lookups
+}
+
+// --- OrderItem Model ---
+// Represents a specific product within an order
+model OrderItem {
+  id                   Int       @id @default(autoincrement())
+  orderId              String
+  order                Order     @relation(fields: [orderId], references: [id])
+  productId            Int?      // Make optional to allow product deletion
+  product              Product?  @relation(fields: [productId], references: [id], onDelete: SetNull) // Use SetNull for onDelete
+  name                 String // Store name at time of order
+  quantity             Int
+  price                Decimal   @db.Decimal(10, 2) // Store price at time of order
+  customizationDetails Json?
+  giftWrap             Boolean?
+  image                String?   @db.Text // Store image URL at time of order
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// --- Review Model ---
+model Review {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  author    String // In real app, link to userId or store user details snapshot
+  authorId  Int?    // Optional: Link to User model if needed
+  // user      User?   @relation(fields: [authorId], references: [id])
+  rating    Int      @db.TinyInt // Use TinyInt for ratings 1-5
+  comment   String?  @db.Text
+  date      DateTime @default(now()) // Date the review was submitted
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  // @@index([authorId]) // Index if using authorId relation
+}
+
+// --- FAvorite Model ---
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+// --- CartItem Model ---
+model CartItem {
+  id                   Int       @id @default(autoincrement())
+  userId               Int
+  productId            Int
+  quantity             Int       @default(1)
+  giftWrap             Boolean   @default(false)
+  customizationDetails String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user     User    @relation(fields: [userId], references: [id])
+  product  Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId], name: "CartItem_userId_productId_key")
+
+  @@index([userId])
+  @@index([productId])
+}
+

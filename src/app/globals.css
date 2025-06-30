@@ -1,26 +1,289 @@
-@import "tailwindcss";
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@tailwind animations;
+/* Define keyframes at top level */
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
 
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
+  @apply antialiased; /* Smoother font rendering */
+}
+
+@layer base {
+  :root {
+    /* New Palette - Light Mode based on #0B2027, #264D5A, #40798C, #589197, #FFFFFF */
+    --background: 0 0% 100%; /* #FFFFFF */
+    --foreground: 205 66% 10%; /* #0B2027 */
+
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 205 66% 10%; /* #0B2027 */
+
+    --popover: 0 0% 100%; /* #FFFFFF */
+    --popover-foreground: 205 66% 10%; /* #0B2027 */
+
+    --primary: 200 38% 40%; /* #40798C */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
+
+    --secondary: 200 40% 94%; /* Light derived from #264D5A */
+    --secondary-foreground: 200 40% 25%; /* #264D5A */
+
+    --muted: 200 40% 94%; /* Light derived from #264D5A */
+    --muted-foreground: 188 25% 47%; /* #589197 */
+
+    --accent: 188 25% 47%; /* #589197 */
+    --accent-foreground: 0 0% 100%; /* #FFFFFF */
+
+    --destructive: 0 75% 55%; /* Keep default red */
+    --destructive-foreground: 0 0% 100%; /* White */
+
+    --border: 200 40% 88%; /* Lighter derived from #264D5A */
+    --input: 200 40% 91%; /* Slightly darker than border */
+    --ring: 200 38% 40%; /* #40798C */
+
+    /* Updated Chart colors using new palette */
+    --chart-1: 200 38% 40%; /* Primary - #40798C */
+    --chart-2: 188 25% 47%; /* Accent - #589197 */
+    --chart-3: 200 40% 25%; /* Secondary Foreground - #264D5A */
+    --chart-4: 270 60% 65%; /* Keep distinct */
+    --chart-5: 0 75% 60%;   /* Keep distinct */
+
+    --radius: 0.5rem; /* Consistent rounded corners */
+
+    /* Sidebar Light - Inherit or Customize */
+    --sidebar-background: hsl(var(--background));
+    --sidebar-foreground: hsl(var(--foreground));
+    --sidebar-border: hsl(var(--border));
+    --sidebar-primary: hsl(var(--primary));
+    --sidebar-primary-foreground: hsl(var(--primary-foreground));
+    --sidebar-secondary: hsl(var(--secondary));
+    --sidebar-secondary-foreground: hsl(var(--secondary-foreground));
+    --sidebar-accent: hsl(var(--accent));
+    --sidebar-accent-foreground: hsl(var(--accent-foreground));
+    --sidebar-destructive: hsl(var(--destructive));
+    --sidebar-destructive-foreground: hsl(var(--destructive-foreground));
+    --sidebar-ring: hsl(var(--ring));
+
+    --font-inter: 'Inter';
+
+  }
+
+  .dark {
+    /* New Palette - Dark Mode based on #0B2027, #264D5A, #40798C, #589197, #FFFFFF */
+    --background: 205 66% 10%; /* #0B2027 */
+    --foreground: 0 0% 98%; /* Off-white */
+
+    --card: 200 40% 15%; /* Darker card bg derived from #264D5A */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 205 66% 10%; /* #0B2027 */
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 200 38% 55%; /* Lighter #40798C for dark mode */
+    --primary-foreground: 205 66% 10%; /* #0B2027 */
+
+    --secondary: 200 40% 25%; /* #264D5A */
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 200 40% 25%; /* #264D5A */
+    --muted-foreground: 188 25% 60%; /* Lighter #589197 */
+
+    --accent: 188 25% 55%; /* Adjusted #589197 for dark */
+    --accent-foreground: 205 66% 10%; /* #0B2027 */
+
+    --destructive: 0 70% 60%; /* Keep default red adjusted */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 40% 35%; /* Darker border derived from #264D5A */
+    --input: 200 40% 30%; /* Darker input */
+    --ring: 200 38% 55%; /* Lighter #40798C */
+
+     /* Updated Chart colors using new palette */
+     --chart-1: 200 38% 55%; /* Primary - Lighter #40798C */
+     --chart-2: 188 25% 55%; /* Accent - Lighter #589197 */
+     --chart-3: 200 40% 25%; /* Secondary - #264D5A */
+     --chart-4: 270 60% 70%; /* Keep distinct, slightly lighter */
+     --chart-5: 0 70% 65%;   /* Keep distinct, slightly lighter */
+
+    --radius: 0.5rem;
+
+    /* Sidebar Dark - Inherit or Customize */
+    --sidebar-background: hsl(var(--background));
+    --sidebar-foreground: hsl(var(--foreground));
+    --sidebar-border: hsl(var(--border));
+    --sidebar-primary: hsl(var(--primary));
+    --sidebar-primary-foreground: hsl(var(--primary-foreground));
+    --sidebar-secondary: hsl(var(--secondary));
+    --sidebar-secondary-foreground: hsl(var(--secondary-foreground));
+    --sidebar-accent: hsl(var(--accent));
+    --sidebar-accent-foreground: hsl(var(--accent-foreground));
+    --sidebar-destructive: hsl(var(--destructive));
+    --sidebar-destructive-foreground: hsl(var(--destructive-foreground));
+    --sidebar-ring: hsl(var(--ring));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Add subtle transition for color mode changes and general background/color changes */
+   body, header, footer, main, div, button, a, input, select, textarea, label, span, p, h1, h2, h3, h4, h5, h6, li, ul, svg {
+      transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+   }
+
+   /* Disable transitions during animations to prevent conflicts */
+   .animate-pulse, .animate-spin {
+       transition: none !important;
+   }
+}
+
+/* Specific component transitions and effects */
+@layer components {
+    /* Product Card Image Hover Effect */
+    .product-card-image {
+        @apply transition-transform duration-300 ease-in-out;
+    }
+    .group:hover .product-card-image {
+        @apply scale-105;
+    }
+
+    /* General Button Hover/Focus Enhancement */
+    .btn-effect {
+        @apply transition-all duration-200 ease-in-out transform hover:scale-[1.02] focus:scale-[1.02] active:scale-[0.98];
+    }
+
+     /* Card Hover Effect */
+    .card-hover-effect {
+        @apply transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1;
+    }
+
+    /* Link Hover Effect */
+    .link-hover-effect {
+        @apply transition-colors duration-200 ease-in-out hover:text-primary;
+    }
+
+     /* Example utility class using the animation */
+     .slide-in-element {
+       animation: slideIn 0.5s ease-out forwards;
+     }
+}
+
+/* Add global smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar styling (optional, for modern look) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background) / 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+
+/* Sidebar specific styles adjustments */
+[data-sidebar="sidebar"] {
+    @apply bg-sidebar text-sidebar-foreground border-sidebar-border;
+}
+
+[data-sidebar="menu-button"] {
+    @apply ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground;
+}
+
+[data-sidebar="menu-sub-button"] {
+    @apply ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground;
+}
+
+[data-sidebar="group-label"] {
+    @apply text-sidebar-foreground/70 ring-sidebar-ring;
+}
+
+[data-sidebar="separator"] {
+    @apply bg-sidebar-border;
+}
+
+[data-sidebar="menu-action"] {
+    @apply text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground;
+}
+
+[data-sidebar="input"] {
+    @apply focus-visible:ring-sidebar-ring;
+}
+
+/* Style for sidebar when variant is floating */
+[data-variant="floating"][data-sidebar="sidebar"] {
+    @apply rounded-lg border border-sidebar-border shadow-lg;
+}
+
+/* Style for sidebar when variant is inset */
+.group\/sidebar-wrapper:has([data-variant="inset"]) {
+    @apply bg-sidebar; /* Apply sidebar background to the wrapper for inset variant */
+}
+main.peer-data-\[variant\=inset\] {
+     @apply bg-background; /* Ensure the main content area uses the main background */
+}
+
+/* Ensure sidebar colors are applied correctly */
+:root {
+    --sidebar-background: hsl(var(--background));
+    --sidebar-foreground: hsl(var(--foreground));
+    --sidebar-border: hsl(var(--border));
+    --sidebar-primary: hsl(var(--primary));
+    --sidebar-primary-foreground: hsl(var(--primary-foreground));
+    --sidebar-secondary: hsl(var(--secondary));
+    --sidebar-secondary-foreground: hsl(var(--secondary-foreground));
+    --sidebar-accent: hsl(var(--accent));
+    --sidebar-accent-foreground: hsl(var(--accent-foreground));
+    --sidebar-destructive: hsl(var(--destructive));
+    --sidebar-destructive-foreground: hsl(var(--destructive-foreground));
+    --sidebar-ring: hsl(var(--ring));
+}
+
+.dark {
+    --sidebar-background: hsl(var(--background)); /* Inherit dark background */
+    --sidebar-foreground: hsl(var(--foreground));
+    --sidebar-border: hsl(var(--border));
+    --sidebar-primary: hsl(var(--primary));
+    --sidebar-primary-foreground: hsl(var(--primary-foreground));
+    --sidebar-secondary: hsl(var(--secondary));
+    --sidebar-secondary-foreground: hsl(var(--secondary-foreground));
+    --sidebar-accent: hsl(var(--accent));
+    --sidebar-accent-foreground: hsl(var(--accent-foreground));
+    --sidebar-destructive: hsl(var(--destructive));
+    --sidebar-destructive-foreground: hsl(var(--destructive-foreground));
+    --sidebar-ring: hsl(var(--ring));
 }

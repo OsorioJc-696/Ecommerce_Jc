@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User Table
+model User {
+  id          Int       @id @default(autoincrement())
+  username    String    @unique
+  email       String    @unique
+  password    String
+  dni         String?   @unique @db.VarChar(8)
+  firstName   String?
+  lastName    String?
+  phoneNumber String?   @db.VarChar(9)
+  address     String?
+  photoUrl    String?   @db.Text // Use Text for potentially long data URIs
+  isAdmin     Boolean   @default(false)
+  orders      Order[] // Relation to Order table
+  favorites   Product[] @relation("UserFavorites") // Many-to-many relation for favorites
+}
+
+// Product Table
+model Product {
+  id               Int         @id @default(autoincrement())
+  name             String
+  description      String?     @db.Text
+  price            Decimal     @db.Decimal(10, 2)
+  image            String?     @db.Text
+  category         String
+  stock            Int         @default(0)
+  customizable     String? // Changed from Enum
+  baseSpecs        Json? // Storing JSON
+  rating           Decimal?    @db.Decimal(3, 2)
+  additionalImages Json? // Storing JSON array of strings
+  reviews          Review[] // Relation to Review table
+  favoritedBy      User[]      @relation("UserFavorites") // Many-to-many relation for favorites
+  orderItems       OrderItem[] // Relation to OrderItem table
+}
+
+// Order Table
+model Order {
+  id              String      @id @unique // Using unique string ID from lib/orders.ts
+  userId          Int
+  user            User        @relation(fields: [userId], references: [id])
+  subtotal        Decimal     @db.Decimal(10, 2)
+  giftWrapTotal   Decimal     @db.Decimal(10, 2)
+  total           Decimal     @db.Decimal(10, 2)
+  status          String // Changed from Enum
+  orderDate       DateTime
+  shippingAddress String
+  billingAddress  String
+  billingEmail    String
+  paymentMethod   String?
+  items           OrderItem[] // Relation to OrderItem table
+
+  @@map("Order") // Explicitly map model name to table name `Order`
+}
+
+// OrderItem Table
+model OrderItem {
+  id                   Int      @id @default(autoincrement())
+  orderId              String
+  order                Order    @relation(fields: [orderId], references: [id])
+  productId            Int
+  product              Product  @relation(fields: [productId], references: [id])
+  name                 String
+  quantity             Int
+  price                Decimal  @db.Decimal(10, 2) // Price per item at time of purchase
+  customizationDetails Json?
+  giftWrap             Boolean?
+  image                String?  @db.Text
+}
+
+// Review Table
+model Review {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  author    String
+  rating    Int
+  comment   String?  @db.Text
+  date      DateTime
+}
