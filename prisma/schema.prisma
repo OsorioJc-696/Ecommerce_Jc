@@ -132,7 +132,7 @@ model CartItem {
   productId            Int
   quantity             Int       @default(1)
   giftWrap             Boolean   @default(false)
-  customizationDetails String?
+  customizationDetails Json?    // ← ✅ cambiado de String? a Json?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
@@ -144,4 +144,5 @@ model CartItem {
   @@index([userId])
   @@index([productId])
 }
+
 

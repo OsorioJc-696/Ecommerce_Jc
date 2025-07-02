@@ -42,7 +42,15 @@ export default function Home() {
 
         const fetchedCategories = await getCategories();
 
-        setProducts(fetchedProducts);
+        setProducts(
+          fetchedProducts.map((product) => ({
+            ...product,
+            price: new (require('decimal.js').Decimal)(product.price),
+            rating: product.rating !== null && product.rating !== undefined
+              ? new (require('decimal.js').Decimal)(product.rating)
+              : null,
+          }))
+        );
         setCategories(fetchedCategories);
 
       } catch (error) {
@@ -59,7 +67,15 @@ export default function Home() {
              // Try fetching again after seeding
              const refetchedProducts = await getAllProducts();
              const refetchedCategories = await getCategories();
-             setProducts(refetchedProducts);
+             setProducts(
+               refetchedProducts.map((product) => ({
+                 ...product,
+                 price: new (require('decimal.js').Decimal)(product.price),
+                 rating: product.rating !== null && product.rating !== undefined
+                   ? new (require('decimal.js').Decimal)(product.rating)
+                   : null,
+               }))
+             );
              setCategories(refetchedCategories);
              if (refetchedProducts.length > 0) {
                 toast({ title: "Database Seeded", description: "Sample products loaded." });
