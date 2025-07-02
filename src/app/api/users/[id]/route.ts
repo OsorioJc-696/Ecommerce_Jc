@@ -32,7 +32,6 @@ export async function PUT(req: Request, { params }: Params) {
     const updatedUser = await prisma.user.update({
       where: { id: parseInt(params.id) },
       data: {
-        name: body.name,
         email: body.email,
         password: body.password,
       },

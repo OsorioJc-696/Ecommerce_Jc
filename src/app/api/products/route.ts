@@ -1,41 +1,49 @@
 // app/api/products/route.ts
-import prisma  from '@/lib/prisma'; // Asegúrate que tengas este archivo configurado
 import { NextResponse } from 'next/server';
+import { getAllProducts } from '@/lib/products';
+import { Decimal } from 'decimal.js';
 
-// GET /api/products
-export async function GET() {
+// Simulación de lógica centralizada, puedes adaptarlo a Prisma o lo que uses
+export async function GET(req: Request) {
   try {
-    const products = await prisma.product.findMany();
-    return NextResponse.json(products);
+    const { searchParams } = new URL(req.url);
+
+    const search = searchParams.get('search')?.toLowerCase() || '';
+    const category = searchParams.get('category') || 'all';
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const perPage = parseInt(searchParams.get('perPage') || '12');
+
+    const allProducts = await getAllProducts();
+
+    // Filtro básico
+    let filtered = allProducts.filter((product) => {
+      const matchesSearch = product.name.toLowerCase().includes(search) ||
+        (product.description || '').toLowerCase().includes(search);
+      const matchesCategory = category === 'all' || product.category === category;
+      return matchesSearch && matchesCategory;
+    });
+
+    // Paginación
+    const total = filtered.length;
+    const totalPages = Math.ceil(total / perPage);
+    const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+
+    // Si usás Decimal.js
+    const safeProducts = paginated.map((product) => ({
+      ...product,
+      price: new Decimal(product.price),
+      rating: product.rating != null ? new Decimal(product.rating) : null,
+    }));
+
+    return NextResponse.json({
+      products: safeProducts,
+      total,
+      page,
+      perPage,
+      totalPages,
+    });
   } catch (error) {
+    console.error('[GET_PRODUCTS_API_ERROR]', error);
     return NextResponse.json({ error: 'Error fetching products' }, { status: 500 });
   }
 }
-
-// POST /api/products
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-
-    const product = await prisma.product.create({
-      data: {
-        name: body.name,
-        description: body.description,
-        price: parseFloat(body.price),
-        image: body.image,
-        additionalImages: body.additionalImages,
-        category: body.category,
-        stock: body.stock,
-        customizable: body.customizable,
-        baseSpecs: body.baseSpecs,
-        rating: parseFloat(body.rating),
-      },
-    });
-
-    return NextResponse.json(product, { status: 201 });
-  } catch (error) {
-    console.error('[PRODUCT_POST_ERROR]', error); // ✅ Agrega esto
-    return NextResponse.json({ error: 'Error creating product' }, { status: 500 });
-  }
-}
-

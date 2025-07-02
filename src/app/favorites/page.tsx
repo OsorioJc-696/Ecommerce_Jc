@@ -1,63 +1,66 @@
 'use client';
 
 import { useAuth } from '@/context/auth-context';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductList } from '@/components/products/product-list';
-import { getProductById, type Product } from '@/lib/products';
+import { type Product } from '@/lib/products';
 import { useToast } from '@/hooks/use-toast';
 
 export default function FavoritesPage() {
   const { currentUser, isLoading: authLoading } = useAuth();
+  const [favorites, setFavorites] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Redirección si no hay usuario
   useEffect(() => {
     if (!authLoading && !currentUser) {
       router.replace('/login?redirect=/favorites');
     }
-  }, [currentUser, authLoading, router]);
+  }, [authLoading, currentUser, router]);
 
+  // Cargar favoritos
   useEffect(() => {
-    async function loadFavorites() {
-      if (!currentUser?.favoriteProductIds?.length) {
-        setFavoriteProducts([]);
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
+    const fetchFavorites = async () => {
+      setLoading(true);
       try {
-        const ids = currentUser.favoriteProductIds
-          .map((id) => parseInt(id, 10))
-          .filter((id) => !isNaN(id));
+        const res = await fetch('/api/favorites', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
 
-        const results = await Promise.allSettled(ids.map(getProductById));
-        const loaded = results
-          .filter((r) => r.status === 'fulfilled' && r.value)
-          .map((r) => (r as PromiseFulfilledResult<Product>).value);
+        if (!res.ok) throw new Error('No se pudieron cargar los favoritos');
 
-        setFavoriteProducts(loaded);
-      } catch (err) {
-        console.error('Failed to load favorites:', err);
-        toast({ variant: 'destructive', title: 'Error', description: 'Failed to load your favorite items.' });
-        setFavoriteProducts([]);
+        const data = await res.json();
+        const products = data.favorites.map((f: any) => f.product);
+        setFavorites(products);
+      } catch (error) {
+        console.error(error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Hubo un problema al cargar tus productos favoritos.',
+        });
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
-    }
+    };
 
-    if (currentUser) loadFavorites();
-    else if (!authLoading) setIsLoading(false);
-  }, [currentUser, authLoading, toast]);
+    if (currentUser) fetchFavorites();
+    else if (!authLoading) setLoading(false);
+  }, [authLoading, currentUser, toast]);
 
-  if (authLoading || isLoading) return <FavoritesSkeleton />;
-  if (!currentUser) return <div className="container mx-auto px-4 py-12 text-center">Redirecting to login...</div>;
+  // Loading skeleton
+  if (authLoading || loading) return <FavoritesSkeleton />;
+  if (!currentUser) return <div className="text-center py-12">Redireccionando...</div>;
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -65,27 +68,27 @@ export default function FavoritesPage() {
         <Heart className="h-10 w-10 text-primary" />
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            My Favorites
-            {favoriteProducts.length > 0 && (
+            Favoritos
+            {favorites.length > 0 && (
               <span className="inline-block text-sm font-semibold bg-primary text-white px-2 py-0.5 rounded-full">
-                {favoriteProducts.length}
+                {favorites.length}
               </span>
             )}
           </h1>
-          <p className="text-muted-foreground">Products you saved for later.</p>
+          <p className="text-muted-foreground">Productos que marcaste como favoritos.</p>
         </div>
       </div>
 
-      {favoriteProducts.length > 0 ? (
-        <ProductList products={favoriteProducts} />
+      {favorites.length > 0 ? (
+        <ProductList products={favorites} />
       ) : (
-        <Card className="max-w-xl mx-auto text-center border border-border shadow-sm">
+        <Card className="max-w-xl mx-auto text-center">
           <CardHeader>
-            <CardTitle>No Favorites Yet</CardTitle>
-            <CardDescription>Click the heart ♡ on products to save them here.</CardDescription>
+            <CardTitle>No hay favoritos</CardTitle>
+            <CardDescription>Aún no has guardado ningún producto.</CardDescription>
           </CardHeader>
-          <CardContent className="pt-4">
-            <p className="text-muted-foreground">Your favorites list is empty.</p>
+          <CardContent>
+            <p className="text-muted-foreground">Explora productos y haz clic en ♡ para guardarlos aquí.</p>
           </CardContent>
         </Card>
       )}

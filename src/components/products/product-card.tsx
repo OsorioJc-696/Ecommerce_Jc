@@ -158,7 +158,7 @@ export function ProductCard({ product }: ProductCardProps) {
             {isOutOfStock ? <PackageX className="h-4 w-4" /> : <PackageCheck className="h-4 w-4" />}
             <span>{product.stock}</span>
           </div>
-          <div className="text-xl font-bold text-foreground">${product.price.toFixed(2)}</div>
+<div className="text-xl font-bold text-foreground">${Number(product.price).toFixed(2)}</div>
         </div>
       </CardContent>
 

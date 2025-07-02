@@ -1,20 +1,15 @@
-// lib/projectUpdateInfoSubscribe.ts
-'use server'; // Mark functions for server-side execution or use in Server Actions
+// lib/producs.ts
+'use server'; 
 
 import { Product } from '@/generated/prisma/wasm';
 import prisma from './prisma';
 import type { Product as PrismaProduct, Review as PrismaReview, Review } from '@prisma/client';
-import { Prisma } from '@prisma/client'; // Import Prisma for JsonValue
+import { Prisma } from '@prisma/client'; 
+import { productSchema, productUpdateSchema } from './validation/productSchema';
+import z from 'zod';
 
-// Re-exporting Prisma types or defining application-specific types
 export type { PrismaProduct as Product, PrismaReview as Review };
 
-
-// --- Prisma Functions ---
-
-/**
- * Retrieves all products from the database.
- */
 export interface ProductDto {
     id: number;
     name: string;
@@ -68,9 +63,6 @@ export async function getAllProducts(): Promise<ProductDto[]> {
     }
 }
 
-/**
- * Retrieves a single product by its ID.
- */
 export async function getProductById(id: number): Promise<ProductDto | null> {
     try {
         const product = await prisma.product.findUnique({
@@ -112,9 +104,6 @@ export async function getProductById(id: number): Promise<ProductDto | null> {
     }
 }
 
-/**
- * Retrieves all unique categories from the products.
- */
 export async function getCategories(): Promise<string[]> {
      try {
         const categories = await prisma.product.findMany({
@@ -128,9 +117,6 @@ export async function getCategories(): Promise<string[]> {
     }
 }
 
-/**
- * Adds a review to a product.
- */
 export async function addProductReview(
   productId: number,
   review: Omit<Review, 'id' | 'date' | 'createdAt' | 'updatedAt' | 'productId'> & { authorId?: number } // Assuming authorId might be linked later
@@ -160,9 +146,6 @@ export async function addProductReview(
   }
 }
 
-/**
- * Updates the average rating for a product based on its reviews.
- */
 async function updateProductRating(productId: number): Promise<void> {
     try {
         const reviews = await prisma.review.findMany({
@@ -191,52 +174,45 @@ async function updateProductRating(productId: number): Promise<void> {
     }
 }
 
-
-/**
- * Updates product details in the database.
- * Only include fields that need updating.
- */
 export async function updateProduct(
     productId: number,
-    updateData: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'reviews' | 'orderItems' | 'price' | 'rating'> & { price?: number | string; rating?: number | null }> // Allow number or string for price/rating input
+    updateData: any
 ): Promise<ProductDto> {
     try {
-         // Convert price/rating back to Decimal if needed, handle JSON fields
-         // Ensure null values are set as Prisma.JsonNull for JSON fields
-         // Start with an empty object and add only valid fields
-         const dataToUpdate: Prisma.ProductUpdateInput = {};
+        const validated = productUpdateSchema.parse(updateData); // ✅ Validación Zod
 
-         if (updateData.name !== undefined) dataToUpdate.name = updateData.name;
-         if (updateData.description !== undefined) dataToUpdate.description = updateData.description;
-         if (updateData.image !== undefined) dataToUpdate.image = updateData.image;
-         if (updateData.category !== undefined) dataToUpdate.category = updateData.category;
-         if (updateData.stock !== undefined) dataToUpdate.stock = updateData.stock;
-         if (updateData.customizable !== undefined) dataToUpdate.customizable = updateData.customizable;
+        const dataToUpdate: Prisma.ProductUpdateInput = {};
 
-         if (updateData.price !== undefined) {
-             dataToUpdate.price = parseFloat(String(updateData.price));
-         }
-         if (updateData.rating !== undefined) {
-             dataToUpdate.rating = updateData.rating !== null ? parseFloat(String(updateData.rating)) : null;
-         }
-         if (updateData.baseSpecs !== undefined) {
-             dataToUpdate.baseSpecs = updateData.baseSpecs === null
-                 ? { set: null }
-                 : { set: updateData.baseSpecs as Prisma.InputJsonValue };
-         }
-         if (updateData.additionalImages !== undefined) {
-             dataToUpdate.additionalImages = updateData.additionalImages === null
-                 ? { set: null }
-                 : { set: updateData.additionalImages as Prisma.InputJsonValue };
-         }
+        if (validated.name !== undefined) dataToUpdate.name = validated.name;
+        if (validated.description !== undefined) dataToUpdate.description = validated.description;
+        if (validated.image !== undefined) dataToUpdate.image = validated.image;
+        if (validated.category !== undefined) dataToUpdate.category = validated.category;
+        if (validated.stock !== undefined) dataToUpdate.stock = validated.stock;
+        if (validated.customizable !== undefined) dataToUpdate.customizable = validated.customizable;
 
+        if (validated.price !== undefined) {
+            dataToUpdate.price = parseFloat(String(validated.price));
+        }
+        if (validated.rating !== undefined) {
+            dataToUpdate.rating = validated.rating !== null ? parseFloat(String(validated.rating)) : null;
+        }
+        if (validated.baseSpecs !== undefined) {
+            dataToUpdate.baseSpecs = validated.baseSpecs === null
+                ? { set: null }
+                : { set: validated.baseSpecs as Prisma.InputJsonValue };
+        }
+        if (validated.additionalImages !== undefined) {
+            dataToUpdate.additionalImages = validated.additionalImages === null
+                ? { set: null }
+                : { set: validated.additionalImages as Prisma.InputJsonValue };
+        }
 
         const updatedProduct = await prisma.product.update({
             where: { id: productId },
             data: dataToUpdate,
             include: { reviews: true },
         });
-        // Convert Decimal/Json types for return value and match ProductDto structure
+
         return {
             id: updatedProduct.id,
             name: updatedProduct.name,
@@ -265,13 +241,13 @@ export async function updateProduct(
         };
     } catch (error) {
         console.error(`Error updating product ${productId}:`, error);
+        if (error instanceof z.ZodError) {
+            throw new Error("Validation failed: " + (error as import('zod').ZodError).errors.map(e => e.message).join(", "));
+        }
         throw new Error("Could not update product.");
     }
 }
 
-/**
- * Decreases the stock of a product.
- */
 export async function decreaseProductStock(productId: number, quantity: number): Promise<boolean> {
     if (quantity <= 0) return false;
 
@@ -301,47 +277,38 @@ export async function decreaseProductStock(productId: number, quantity: number):
     }
 }
 
-
-/**
- * Adds a new product to the database.
- */
 export async function addProduct(
-    newProductData: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'reviews' | 'orderItems' | 'rating' | 'price'> & { price: number | string } // Require price as number or string
+    newProductData: any
 ): Promise<Product> {
     try {
+        const validated = productSchema.parse(newProductData); // ✅ Validación Zod
+
         const productToCreate: Prisma.ProductCreateInput = {
-             ...newProductData,
-             price: parseFloat(String(newProductData.price)), // Ensure price is a number
-             baseSpecs: newProductData.baseSpecs === undefined || newProductData.baseSpecs === null ? Prisma.JsonNull : newProductData.baseSpecs as Prisma.InputJsonValue, // Use Prisma.JsonNull for null
-             additionalImages: newProductData.additionalImages === undefined || newProductData.additionalImages === null ? Prisma.JsonNull : newProductData.additionalImages as Prisma.InputJsonValue, // Use Prisma.JsonNull for null
-             rating: null, // Initialize rating as null
-             // Explicitly exclude relations if they are not meant to be created here
-             // reviews: undefined,
-             // orderItems: undefined,
+            ...validated,
+            price: parseFloat(String(validated.price)),
+            baseSpecs: validated.baseSpecs ?? Prisma.JsonNull,
+            additionalImages: validated.additionalImages ?? Prisma.JsonNull,
+            rating: null,
         };
 
-        const newProduct = await prisma.product.create({
-            data: productToCreate,
-        });
-        // Convert Decimal for return value
+        const newProduct = await prisma.product.create({ data: productToCreate });
+
         return {
             ...newProduct,
             price: new Prisma.Decimal(newProduct.price),
-            rating: null, // Rating starts as null
+            rating: null,
             baseSpecs: newProduct.baseSpecs as Prisma.JsonValue | null,
-            additionalImages: newProduct.additionalImages as string[] | null
+            additionalImages: newProduct.additionalImages as string[] | null,
         };
     } catch (error) {
         console.error("Error adding product:", error);
+        if (error instanceof z.ZodError) {
+            throw new Error("Validation failed: " + error.errors.map(e => e.message).join(", "));
+        }
         throw new Error("Could not add product.");
     }
 }
 
-/**
- * Deletes a product from the database.
- * WARNING: Ensure related OrderItems, Reviews etc. are handled (e.g., cascade delete or prevent deletion if referenced).
- * Prisma schema needs onDelete rules for this.
- */
 export async function deleteProduct(productId: number): Promise<boolean> {
     try {
          // Add checks here if needed (e.g., check if product is in active orders)
@@ -374,11 +341,6 @@ export async function deleteProduct(productId: number): Promise<boolean> {
     }
 }
 
-/**
- * Seeds the database with sample products if it's empty.
- * Run this manually or conditionally on app startup (carefully in production).
- */
-// Example sample products for seeding (customize as needed)
 const sampleProducts: Array<{
     name: string;
     description: string | null;
