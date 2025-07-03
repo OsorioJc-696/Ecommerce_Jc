@@ -1,19 +1,41 @@
-// /app/api/favorites/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthUserFromRequest } from '@/lib/auth'; // tu propia lógica de auth
-import prisma from '@/lib/prisma'; // si usas Prisma
+import prisma from '@/lib/prisma'; // asegúrate que esté bien configurado
 
 export async function GET(req: NextRequest) {
-  const user = await getAuthUserFromRequest(req);
+  try {
+    const favorites = await prisma.favorite.findMany({
+      include: { product: true },
+    });
 
-  if (!user) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ favorites });
+  } catch (error) {
+    console.error('Error fetching favorites:', error);
+    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
+}
+export async function POST(req: NextRequest) {
+  try {
+    const { productId, userId } = await req.json();
 
-  const favorites = await prisma.favorite.findMany({
-    where: { userId: typeof user.id === 'string' ? parseInt(user.id, 10) : user.id },
-    include: { product: true },
-  });
+    if (!productId || !userId) {
+      return NextResponse.json({ message: 'Product ID and User ID are required' }, { status: 400 });
+    }
 
-  return NextResponse.json({ favorites });
+    const existingFavorite = await prisma.favorite.findFirst({
+      where: { productId, userId },
+    });
+
+    if (existingFavorite) {
+      return NextResponse.json({ message: 'Product already in favorites' }, { status: 409 });
+    }
+
+    const favorite = await prisma.favorite.create({
+      data: { productId, userId },
+    });
+
+    return NextResponse.json({ favorite });
+  } catch (error) {
+    console.error('Error adding favorite:', error);
+    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+  }
 }
