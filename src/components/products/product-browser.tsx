@@ -145,22 +145,23 @@ export function ProductBrowser({
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent className="rounded-md shadow-lg border border-border">
-              <SelectItem value="all" asChild>
-                <div role="option">All Categories</div>
-              </SelectItem>
+  <SelectItem value="all" asChild>
+    <span role="option">All Categories</span>
+  </SelectItem>
 
-              {categories.length === 0 && !isLoading && (
-                <SelectItem value="no-categories" disabled asChild>
-                  <div role="option">No categories found</div>
-                </SelectItem>
-              )}
+  {categories.length === 0 && !isLoading && (
+    <SelectItem value="no-categories" disabled asChild>
+      <span role="option">No categories found</span>
+    </SelectItem>
+  )}
 
-              {categories.map((category, idx) => (
-                <SelectItem key={`${category}-${idx}`} value={category} asChild>
-                  <div role="option">{category}</div>
-                </SelectItem>
-              ))}
-            </SelectContent>
+  {categories.map((category, idx) => (
+    <SelectItem key={`${category}-${idx}`} value={category} asChild>
+      <span role="option">{category}</span>
+    </SelectItem>
+  ))}
+</SelectContent>
+
 
           </Select>
         </div>
