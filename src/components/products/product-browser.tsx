@@ -152,9 +152,13 @@ export function ProductBrowser({
                 </SelectItem>
               )}
               {categories.map((category, idx) => (
-  <SelectItem key={`${category}-${idx}`} value={category}>
-    {category}
-  </SelectItem>
+              <SelectItem 
+              key={`${category}-${idx}`} 
+              value={category}
+              asChild // permite personalizar el tag
+              >
+                <div role="option">{category}</div>
+              </SelectItem>
 ))}
 
             </SelectContent>
