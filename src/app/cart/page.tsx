@@ -78,7 +78,10 @@ export default function CartPage() {
           {/* Cart Items List */}
           <div className="lg:col-span-2 space-y-6">
             {cartItems.map((item) => (
-              <Card key={item.cartItemId} className="flex flex-col sm:flex-row items-start sm:items-center p-4 shadow-sm"> {/* Use cartItemId */}
+              <Card key={item.cartItemId} 
+              className="flex flex-col sm:flex-row items-start sm:items-center p-4 shadow-sm"
+              data-testid="cart-item"> 
+              {/* Use cartItemId */}
                  <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-md overflow-hidden mr-0 sm:mr-6 mb-4 sm:mb-0 flex-shrink-0">
                   <Image
                     src={item.image || '/placeholder-image.png'}
