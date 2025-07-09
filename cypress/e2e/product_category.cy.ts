@@ -21,28 +21,29 @@ describe('Product Browser E2E', () => {
     cy.contains(productName, { timeout: 5000 }).should('be.visible');
   });
 
-  it('Filtra por categoría "PC"', () => {
-  const categoryName = 'PC';
-  const normalized = categoryName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
-  
-  // Abre el selector de categoría
-  cy.get('[data-testid="category-option-all"]').click({ force: true });
+  it('Filtra los productos por la categoría "PC"', () => {
+    const categoryName = 'PC';
+    const normalized = categoryName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
 
-  // Espera a que se muestre la opción deseada
-  cy.get(`[data-testid="category-option-${normalized}"]`, { timeout: 6000 }).should('be.visible');
+    // Abre el dropdown de categorías
+    cy.get('button[aria-label="Filter by category"]')
+      .should('be.visible')
+      .click({ force: true });
 
-  // Hace clic en la categoría
-  cy.get(`[data-testid="category-option-${normalized}"]`).click({ force: true });
+    // Clic en la opción "PC"
+    cy.get(`[data-testid="category-option-${normalized}"]`)
+      .should('be.visible')
+      .click({ force: true });
 
-  // Espera que cargue
-  cy.get('.animate-spin').should('exist');
-  cy.get('.animate-spin', { timeout: 10000 }).should('not.exist');
+    // Esperar a que se actualice la lista de productos
+    cy.get('.animate-spin').should('exist');
+    cy.get('.animate-spin', { timeout: 10000 }).should('not.exist');
 
-  // Verifica que los productos mostrados contienen "PC"
-  cy.get('[data-testid="product-card"]').each(($el) => {
-    cy.wrap($el).should('contain.text', categoryName);
+    // Verifica que los productos visibles están relacionados con la categoría "PC"
+    cy.get('[data-testid="product-card"]').should('exist').each(($card) => {
+      cy.wrap($card).should('contain.text', categoryName);
+    });
   });
-});
 
 
   it('Filtra productos personalizables con el botón Customize', () => {

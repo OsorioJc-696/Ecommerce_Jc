@@ -141,7 +141,7 @@ export function ProductBrowser({
             onValueChange={handleCategoryChange}
             disabled={isLoading}
           >
-            <SelectTrigger className="w-full pl-12 py-3 rounded-full border border-border bg-background shadow-md focus:ring-2 focus:ring-primary focus:outline-none text-base">
+            <SelectTrigger data-testid="category-select-trigger" className="w-full pl-12 py-3 rounded-full border border-border bg-background shadow-md focus:ring-2 focus:ring-primary focus:outline-none text-base">
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent className="rounded-md shadow-lg border border-border">
