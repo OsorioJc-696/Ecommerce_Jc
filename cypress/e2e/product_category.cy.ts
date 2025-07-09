@@ -1,7 +1,7 @@
 describe('Product Browser E2E', () => {
   beforeEach(() => {
     cy.visit('https://digitalzone-jc.netlify.app');
-    cy.get('.animate-spin', { timeout: 10000 }).should('not.exist'); // Aumentamos el timeout por seguridad
+    cy.get('.animate-spin', { timeout: 10000 }).should('not.exist');
   });
 
   it('Busca un producto por nombre', () => {
@@ -10,7 +10,7 @@ describe('Product Browser E2E', () => {
     cy.get('input[placeholder="Search for a product..."]')
       .should('be.visible')
       .clear()
-      .type(productName, { delay: 100 }) // simulate user typing slowly
+      .type(productName, { delay: 100 })
       .should('have.value', productName);
 
     // Espera debounce + carga
@@ -22,30 +22,27 @@ describe('Product Browser E2E', () => {
   });
 
   it('Filtra por categoría "PC"', () => {
-  // Encuentra y abre el dropdown de categoría
+  // Paso 1: Abrir el menú de categorías haciendo clic en el botón
   cy.get('button')
-    .contains(/all categories/i) // detecta el texto, sin importar mayúsculas
+    .contains(/^All Categories$/i) // asegúrate que diga "All Categories"
     .should('be.visible')
     .click({ force: true });
 
-  // Espera a que se rendericen las opciones (role="option")
-  cy.get('[role="option"]', { timeout: 6000 }).should('exist');
+  // Paso 2: Esperar a que aparezca la opción "PC"
+  cy.get('[data-testid="category-option-pc"]', { timeout: 6000 }).should('be.visible');
 
-  // Selecciona la categoría "PC"
-  cy.get('[role="option"]')
-    .contains(/^PC$/) // solo "PC", no cosas como "PC Gaming"
-    .click({ force: true });
+  // Paso 3: Hacer clic en la categoría "PC"
+  cy.get('[data-testid="category-option-pc"]').click({ force: true });
 
-  // Espera a que se muestren los productos (loading → no loading)
+  // Paso 4: Esperar a que termine el spinner de carga
   cy.get('.animate-spin').should('exist');
   cy.get('.animate-spin', { timeout: 10000 }).should('not.exist');
 
-  // Verifica que todos los productos mostrados pertenecen a la categoría "PC"
+  // Paso 5: Verificar que los productos filtrados tienen relación con "PC"
   cy.get('[data-testid="product-card"]').each(($el) => {
     cy.wrap($el).should('contain.text', 'PC');
   });
 });
-
 
 
   it('Filtra productos personalizables con el botón Customize', () => {

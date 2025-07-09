@@ -157,7 +157,7 @@ export function ProductBrowser({
     <SelectItem
   key={`${category}-${idx}`}
   value={category}
-  data-testid={`category-option-${category.toLowerCase().replace(/\s/g, '-')}`}
+  data-testid={`category-option-${category.toLowerCase()}`}
   aria-label={`Category ${category}`}
 >
   {category}
