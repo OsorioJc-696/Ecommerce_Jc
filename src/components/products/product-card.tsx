@@ -184,6 +184,7 @@ export function ProductCard({ product }: ProductCardProps) {
             className="bg-primary text-primary-foreground hover:bg-primary/90"
             disabled={isOutOfStock}
             aria-label={isOutOfStock ? 'Out of stock' : 'Add to cart'}
+            data-testid="add-to-cart-button"
           >
             {isOutOfStock ? <PackageX className="h-4 w-4 mr-1" /> : <ShoppingCart className="h-4 w-4 mr-1" />}
             {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
