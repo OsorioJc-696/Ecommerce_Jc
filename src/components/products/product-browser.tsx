@@ -49,11 +49,15 @@ export function ProductBrowser({
     setIsLoading(true);
     try {
       const query = new URLSearchParams({
-        search: debouncedSearch,
-        category: selectedCategory,
-        page: page.toString(),
-        perPage: PRODUCTS_PER_PAGE.toString(),
-      });
+  search: debouncedSearch,
+  category: selectedCategory,
+  page: page.toString(),
+  perPage: PRODUCTS_PER_PAGE.toString(),
+});
+
+if (customizableToggle && showCustomizableOnly) {
+  query.set('customizable', 'true');
+}
 
       const [productsRes, categoriesRes] = await Promise.all([
         fetch(`/api/products?${query}`),
@@ -179,7 +183,11 @@ export function ProductBrowser({
           <div className="flex justify-end mb-4">
             <button
               type="button"
-              onClick={() => setShowCustomizableOnly((prev) => !prev)}
+              onClick={() => {
+  setShowCustomizableOnly((prev) => !prev);
+  setPage(1); // ← importante resetear
+}}
+
               className={`px-5 py-2 rounded-full font-semibold text-sm transition-colors
               ${showCustomizableOnly
                 ? 'bg-primary text-white hover:bg-primary/90'

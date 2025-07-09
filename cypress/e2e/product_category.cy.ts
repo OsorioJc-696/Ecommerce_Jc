@@ -1,6 +1,6 @@
 describe('Product Browser E2E', () => {
   beforeEach(() => {
-    cy.visit('https://digitalzone-jc.netlify.app');
+    cy.visit('http://localhost:3000');
     cy.get('.animate-spin', { timeout: 10000 }).should('not.exist');
   });
 
@@ -22,28 +22,40 @@ describe('Product Browser E2E', () => {
   });
 
   it('Filtra los productos por la categoría "PC"', () => {
-    const categoryName = 'PC';
-    const normalized = categoryName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+  const categoryName = 'PC';
+  const normalized = categoryName.toLowerCase(); // "pc"
 
-    // Abre el dropdown de categorías
-    cy.get('button[aria-label="Filter by category"]')
-      .should('be.visible')
-      .click({ force: true });
+  // ✅ Espera que los productos iniciales se carguen (indicador de loading desaparece)
+  cy.get('.animate-spin', { timeout: 10000 }).should('not.exist');
 
-    // Clic en la opción "PC"
-    cy.get(`[data-testid="category-option-${normalized}"]`)
-      .should('be.visible')
-      .click({ force: true });
+  // ✅ Asegura que los productos están visibles
+  cy.get('[data-testid="product-card"]').should('exist');
 
-    // Esperar a que se actualice la lista de productos
-    cy.get('.animate-spin').should('exist');
-    cy.get('.animate-spin', { timeout: 10000 }).should('not.exist');
+  // ✅ Luego abre el dropdown de categorías
+  cy.get('[data-testid="category-select-trigger"]')
+    .should('be.visible')
+    .click({ force: true });
 
-    // Verifica que los productos visibles están relacionados con la categoría "PC"
-    cy.get('[data-testid="product-card"]').should('exist').each(($card) => {
-      cy.wrap($card).should('contain.text', categoryName);
-    });
+  // ✅ Espera a que se rendericen las opciones
+  cy.get(`[data-testid^="category-option-"]`, { timeout: 5000 }).should('exist');
+
+  // ✅ Selecciona la categoría deseada
+  cy.get(`[data-testid="category-option-${normalized}"]`)
+    .should('be.visible')
+    .click({ force: true });
+
+  // ✅ Espera nueva carga (si hay loading)
+  cy.get('.animate-spin').should('exist');
+  cy.get('.animate-spin', { timeout: 10000 }).should('not.exist');
+
+  // ✅ Verifica productos filtrados por categoría
+  cy.get('[data-testid="product-card"]').each(($card) => {
+    cy.wrap($card).should('contain.text', categoryName);
   });
+});
+
+
+
 
 
   it('Filtra productos personalizables con el botón Customize', () => {

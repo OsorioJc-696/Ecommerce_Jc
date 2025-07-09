@@ -10,30 +10,41 @@ export async function GET(req: Request) {
 
     const search = searchParams.get('search')?.toLowerCase() || '';
     const category = searchParams.get('category') || 'all';
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-    const perPage = parseInt(searchParams.get('perPage') || '12');
+    const customizable = searchParams.get('customizable') === 'true';
+
+    // Solo usar paginación si no se pide personalizado
+    const page = customizable
+      ? 1
+      : Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const perPage = customizable
+      ? Number.MAX_SAFE_INTEGER
+      : parseInt(searchParams.get('perPage') || '12');
 
     const allProducts = await getAllProducts();
 
-    // Filtro básico
-    let filtered = allProducts.filter((product) => {
-      const matchesSearch = product.name.toLowerCase().includes(search) ||
+    const filtered = allProducts.filter((product) => {
+      const matchesSearch =
+        product.name.toLowerCase().includes(search) ||
         (product.description || '').toLowerCase().includes(search);
       const matchesCategory = category === 'all' || product.category === category;
-      return matchesSearch && matchesCategory;
+      const matchesCustomizable = !customizable || Boolean(product.customizable) === true;
+
+      return matchesSearch && matchesCategory && matchesCustomizable;
     });
 
-    // Paginación
     const total = filtered.length;
-    const totalPages = Math.ceil(total / perPage);
-    const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+    const totalPages = customizable
+      ? 1
+      : Math.ceil(total / perPage);
 
-    // Si usás Decimal.js
+    const paginated = customizable
+      ? filtered // mostrar todos sin paginar
+      : filtered.slice((page - 1) * perPage, page * perPage);
+
     const safeProducts = paginated.map((product) => ({
       ...product,
       price: Number(product.price),
-rating: product.rating != null ? Number(product.rating) : null,
-
+      rating: product.rating != null ? Number(product.rating) : null,
     }));
 
     return NextResponse.json({
@@ -45,6 +56,10 @@ rating: product.rating != null ? Number(product.rating) : null,
     });
   } catch (error) {
     console.error('[GET_PRODUCTS_API_ERROR]', error);
-    return NextResponse.json({ error: 'Error fetching products' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Error fetching products' },
+      { status: 500 }
+    );
   }
 }
+
