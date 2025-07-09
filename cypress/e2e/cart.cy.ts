@@ -6,7 +6,7 @@ describe('Agregar producto específico al carrito', () => {
     cy.get('[aria-label^="Product card for"]', { timeout: 8000 }).should('have.length.at.least', 4);
 
     // Selecciona el cuarto producto y hace clic en el botón "Add to Cart"
-    cy.get('[aria-label^="Product card for"]').eq(3).within(() => {
+    cy.get('[aria-label^="Product card for"]').eq(4).within(() => {
     cy.get('[data-testid="add-to-cart-button"]').click();
     });
 

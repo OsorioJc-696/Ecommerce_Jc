@@ -1,6 +1,6 @@
 describe('Product Browser E2E', () => {
   beforeEach(() => {
-    cy.visit('http://localhost:3000');
+    cy.visit('https://digitalzone-jc.netlify.app');
     cy.get('.animate-spin', { timeout: 10000 }).should('not.exist');
   });
 
