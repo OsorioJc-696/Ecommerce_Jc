@@ -76,6 +76,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card
+      data-testid="product-card"
       className={cn(
         'flex flex-col overflow-hidden bg-card text-card-foreground border border-border h-full transition-shadow hover:shadow-lg group rounded-lg',
         isOutOfStock && 'opacity-60 cursor-not-allowed'
