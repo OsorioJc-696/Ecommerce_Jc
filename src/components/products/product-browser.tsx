@@ -15,6 +15,8 @@ import { Search, Filter, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { type Product } from '@/lib/products';
 import { Decimal } from 'decimal.js';
+import { useDebounce } from '@/hooks/use-debounce';
+import { useDeferredValue } from 'react';
 
 const PRODUCTS_PER_PAGE = 12;
 
@@ -34,6 +36,7 @@ export function ProductBrowser({
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const { toast } = useToast();
+  const debouncedSearch = useDebounce(searchTerm, 400);
 
   const normalizeProduct = (p: any): Product => ({
     ...p,
@@ -42,52 +45,54 @@ export function ProductBrowser({
   });
 
   useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const query = new URLSearchParams({
-          search: searchTerm,
-          category: selectedCategory,
-          page: page.toString(),
-          perPage: PRODUCTS_PER_PAGE.toString(),
-        });
+  async function loadData() {
+    setIsLoading(true);
+    try {
+      const query = new URLSearchParams({
+        search: debouncedSearch,
+        category: selectedCategory,
+        page: page.toString(),
+        perPage: PRODUCTS_PER_PAGE.toString(),
+      });
 
-        const [productsRes, categoriesRes] = await Promise.all([
-          fetch(`/api/products?${query}`),
-          fetch('/api/categories'),
-        ]);
+      const [productsRes, categoriesRes] = await Promise.all([
+        fetch(`/api/products?${query}`),
+        fetch('/api/categories'),
+      ]);
 
-        if (!productsRes.ok || !categoriesRes.ok) {
-          throw new Error('Failed to fetch data');
-        }
-
-        const productData = await productsRes.json();
-        const categoryResJson = await categoriesRes.json();
-
-// Asegúrate de extraer los nombres correctamente
-const categoryNames = Array.isArray(categoryResJson.categories)
-  ? categoryResJson.categories.map((cat: { name: any; }) => cat.name)
-  : [];
-
-setCategories(categoryNames);
-
-
-        setProducts(Array.isArray(productData.products) ? productData.products.map(normalizeProduct) : []);
-        setTotalPages(productData.totalPages || 1);
-      } catch (error) {
-        console.error('Failed to load store data:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Could not load store data.',
-        });
-      } finally {
-        setIsLoading(false);
+      if (!productsRes.ok || !categoriesRes.ok) {
+        throw new Error('Failed to fetch data');
       }
-    }
 
-    loadData();
-  }, [searchTerm, selectedCategory, page, toast]);
+      const productData = await productsRes.json();
+      const categoryResJson = await categoriesRes.json();
+
+      const categoryNames = Array.isArray(categoryResJson.categories)
+        ? categoryResJson.categories
+        : [];
+
+      setCategories(categoryNames);
+      setProducts(
+        Array.isArray(productData.products)
+          ? productData.products.map(normalizeProduct)
+          : []
+      );
+      setTotalPages(productData.totalPages || 1);
+    } catch (error) {
+      console.error('Failed to load store data:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not load store data.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  loadData();
+}, [debouncedSearch, selectedCategory, page, toast]);
+
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) =>
@@ -114,7 +119,7 @@ setCategories(categoryNames);
       )}
 
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-        {/* Search */}
+       
         <div className="relative w-full sm:w-2/3">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
           <Input
@@ -122,7 +127,7 @@ setCategories(categoryNames);
             placeholder="Search for a product..."
             value={searchTerm}
             onChange={(e) => handleSearchChange(e.target.value)}
-            disabled={isLoading}
+            
             className="w-full pl-12 pr-4 py-3 rounded-full border border-border bg-background shadow-md focus:ring-2 focus:ring-primary focus:outline-none text-base"
             aria-label="Search products"
           />
@@ -146,11 +151,12 @@ setCategories(categoryNames);
                   No categories found
                 </SelectItem>
               )}
-              {categories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category}
-                </SelectItem>
-              ))}
+              {categories.map((category, idx) => (
+  <SelectItem key={`${category}-${idx}`} value={category}>
+    {category}
+  </SelectItem>
+))}
+
             </SelectContent>
           </Select>
         </div>
@@ -159,6 +165,7 @@ setCategories(categoryNames);
         {customizableToggle && (
           <div className="flex justify-end mb-4">
             <button
+              type="button"
               onClick={() => setShowCustomizableOnly((prev) => !prev)}
               className={`px-5 py-2 rounded-full font-semibold text-sm transition-colors
               ${showCustomizableOnly

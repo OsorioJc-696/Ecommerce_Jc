@@ -1,34 +1,53 @@
-describe('Product Category Filter', () => {
+describe('Product Browser E2E', () => {
   beforeEach(() => {
-    cy.visit('https://digitalzone-jc.netlify.app/products'); // Asegúrate que la ruta sea correcta
+    cy.visit('https://digitalzone-jc.netlify.app');
+    cy.get('.animate-spin').should('not.exist'); // Espera a que termine el loading
   });
 
-  it('should display all categories and filter products correctly', () => {
-    // Verifica que el botón "All" esté visible
-    cy.contains('button', 'All').should('be.visible');
+  it('Busca un producto por nombre', () => {
+    cy.get('input[placeholder="Search for a product..."]')
+      .should('be.visible')
+      .and('not.be.disabled')
+      .type('Gaming Laptop Pro');
 
-    // Guarda todas las categorías en una lista (puedes ajustar si es dinámico)
-    const categories = ['Laptops', 'Phones', 'Accessories'];
+    // Espera resultados actualizados
+    cy.get('.animate-spin').should('not.exist');
 
-    // Para cada categoría, haz clic y verifica que los productos filtrados correspondan
-    categories.forEach((category) => {
-      cy.contains('button', category).click();
+    // Verifica que se muestra el producto con ese nombre
+    cy.contains('Gaming Laptop Pro').should('be.visible');
+  });
 
-      // Esperamos que los productos mostrados tengan esa categoría en alguna parte visible
-      cy.get('[data-testid="product-card"]').each(($card) => {
-        cy.wrap($card)
-          .should('be.visible')
-          .invoke('text')
-          .then((text) => {
-            expect(text.toLowerCase()).to.include(category.toLowerCase());
-          });
-      });
+  it('Filtra por categoría "PC"', () => {
+    // Abrir el dropdown de categorías
+    cy.get('[aria-label="Search products"]') // input de búsqueda
+      .should('exist');
+
+    cy.get('.lucide-filter').click({ force: true }); // abre dropdown si necesario
+
+    // Abre el trigger manualmente si no se abre automáticamente
+    cy.get('[data-state="closed"]').first().click({ force: true });
+
+    // Espera y selecciona la categoría "PC"
+    cy.get('[role="option"]').contains('PC').click({ force: true });
+
+    // Espera la actualización
+    cy.get('.animate-spin').should('not.exist');
+
+    // Verifica que todos los productos mostrados son de la categoría "PC"
+    cy.get('[data-testid="product-card"]').each(($el) => {
+      cy.wrap($el).should('contain.text', 'PC');
     });
+  });
 
-    // Regresar a "All"
-    cy.contains('button', 'All').click();
+  it('Filtra productos personalizables con el botón Customize', () => {
+    cy.contains('Customize').click();
 
-    // Espera que haya más de una categoría representada
-    cy.get('[data-testid="product-card"]').should('have.length.greaterThan', categories.length);
+    // Espera resultados
+    cy.get('.animate-spin').should('not.exist');
+
+    // Verifica que todos los productos mostrados son personalizables
+    cy.get('[data-testid="product-card"]').each(($el) => {
+      cy.wrap($el).should('contain.text', 'Customizable');
+    });
   });
 });

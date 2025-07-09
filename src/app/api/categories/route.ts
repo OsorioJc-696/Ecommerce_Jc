@@ -1,41 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; // asegúrate que esté bien configurado
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    const favorites = await prisma.favorite.findMany({
-      include: { product: true },
+    const categories = await prisma.product.findMany({
+      select: {
+        category: true,
+      },
+      distinct: ['category'],
+      orderBy: {
+        category: 'asc',
+      },
     });
 
-    return NextResponse.json({ favorites });
+    // Mapear a solo los nombres de categoría
+    const categoryNames = categories.map((c) => c.category).filter(Boolean);
+
+    return NextResponse.json({ categories: categoryNames });
   } catch (error) {
-    console.error('Error fetching favorites:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
-  }
-}
-export async function POST(req: NextRequest) {
-  try {
-    const { productId, userId } = await req.json();
-
-    if (!productId || !userId) {
-      return NextResponse.json({ message: 'Product ID and User ID are required' }, { status: 400 });
-    }
-
-    const existingFavorite = await prisma.favorite.findFirst({
-      where: { productId, userId },
-    });
-
-    if (existingFavorite) {
-      return NextResponse.json({ message: 'Product already in favorites' }, { status: 409 });
-    }
-
-    const favorite = await prisma.favorite.create({
-      data: { productId, userId },
-    });
-
-    return NextResponse.json({ favorite });
-  } catch (error) {
-    console.error('Error adding favorite:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    console.error('[GET_CATEGORIES_ERROR]', error);
+    return NextResponse.json({ error: 'Error fetching categories' }, { status: 500 });
   }
 }

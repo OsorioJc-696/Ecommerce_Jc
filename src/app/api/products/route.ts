@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getAllProducts } from '@/lib/products';
 import { Decimal } from 'decimal.js';
 
-// Simulación de lógica centralizada, puedes adaptarlo a Prisma o lo que uses
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -31,8 +31,9 @@ export async function GET(req: Request) {
     // Si usás Decimal.js
     const safeProducts = paginated.map((product) => ({
       ...product,
-      price: new Decimal(product.price),
-      rating: product.rating != null ? new Decimal(product.rating) : null,
+      price: Number(product.price),
+rating: product.rating != null ? Number(product.rating) : null,
+
     }));
 
     return NextResponse.json({
