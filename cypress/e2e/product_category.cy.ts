@@ -22,25 +22,25 @@ describe('Product Browser E2E', () => {
   });
 
   it('Filtra por categoría "PC"', () => {
-  // Paso 1: Abrir el menú de categorías haciendo clic en el botón
-  cy.get('button')
-    .contains(/^All Categories$/i) // asegúrate que diga "All Categories"
-    .should('be.visible')
-    .click({ force: true });
+  const categoryName = 'PC';
+  const normalized = categoryName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+  
+  // Abre el selector de categoría
+  cy.get('[data-testid="category-option-all"]').click({ force: true });
 
-  // Paso 2: Esperar a que aparezca la opción "PC"
-  cy.get('[data-testid="category-option-pc"]', { timeout: 6000 }).should('be.visible');
+  // Espera a que se muestre la opción deseada
+  cy.get(`[data-testid="category-option-${normalized}"]`, { timeout: 6000 }).should('be.visible');
 
-  // Paso 3: Hacer clic en la categoría "PC"
-  cy.get('[data-testid="category-option-pc"]').click({ force: true });
+  // Hace clic en la categoría
+  cy.get(`[data-testid="category-option-${normalized}"]`).click({ force: true });
 
-  // Paso 4: Esperar a que termine el spinner de carga
+  // Espera que cargue
   cy.get('.animate-spin').should('exist');
   cy.get('.animate-spin', { timeout: 10000 }).should('not.exist');
 
-  // Paso 5: Verificar que los productos filtrados tienen relación con "PC"
+  // Verifica que los productos mostrados contienen "PC"
   cy.get('[data-testid="product-card"]').each(($el) => {
-    cy.wrap($el).should('contain.text', 'PC');
+    cy.wrap($el).should('contain.text', categoryName);
   });
 });
 

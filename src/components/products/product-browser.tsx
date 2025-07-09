@@ -145,7 +145,9 @@ export function ProductBrowser({
               <SelectValue placeholder="Filter by category" />
             </SelectTrigger>
             <SelectContent className="rounded-md shadow-lg border border-border">
-  <SelectItem data-testid="category-option" value="all">All Categories</SelectItem>
+  <SelectItem data-testid="category-option-all" value="all">
+    All Categories
+  </SelectItem>
 
   {categories.length === 0 && !isLoading && (
     <SelectItem value="no-categories" disabled>
@@ -153,18 +155,21 @@ export function ProductBrowser({
     </SelectItem>
   )}
 
-  {categories.map((category, idx) => (
-    <SelectItem
-  key={`${category}-${idx}`}
-  value={category}
-  data-testid={`category-option-${category.toLowerCase()}`}
-  aria-label={`Category ${category}`}
->
-  {category}
-</SelectItem>
-
-  ))}
+  {categories.map((category, idx) => {
+    const normalized = category.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+    return (
+      <SelectItem
+        key={`${category}-${idx}`}
+        value={category}
+        data-testid={`category-option-${normalized}`}
+        aria-label={`Category ${category}`}
+      >
+        {category}
+      </SelectItem>
+    );
+  })}
 </SelectContent>
+
 
           </Select>
         </div>
